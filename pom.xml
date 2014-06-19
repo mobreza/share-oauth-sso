@@ -15,7 +15,7 @@
         <env>${user.name}</env>
         <webapp.name>share</webapp.name>
         <project.reporting.outputEncoding>UTF-8</project.reporting.outputEncoding>
-        <alfresco.version>4.2.b</alfresco.version>
+        <alfresco.version>4.2.f</alfresco.version>
         <alfresco.groupId>org.alfresco</alfresco.groupId>
         <skip.functional.tests>true</skip.functional.tests>
         <share.log.level>info</share.log.level>
