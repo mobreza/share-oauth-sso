@@ -278,7 +278,7 @@ public class OAuthSSOAuthenticationFilter implements Filter {
      * @return true if the email is valid
      */
     protected boolean isUserValid(String userEmail) {
-    	logger.warn("isUserValid " + isUserValid);
+    	logger.warn("isUserValid " + userEmail);
         
         if (!EmailValidator.getInstance().isValid(userEmail)) {
             return false;
