@@ -140,7 +140,9 @@ public class OAuthSSOAuthenticationFilter implements Filter {
                 .apiSecret(getConfigurationValue(API_SECRET))
                 .scope(getConfigurationValue(API_SCOPE))
                 .approvalPrompt(getConfigurationValue(API_PROMPT));
+
         if (StringUtils.isNotEmpty(callbackURL)) {
+        	logger.debug("Adding callbackUrl " + callbackURL);
             sb.callback(callbackURL);
         }
 
@@ -149,8 +151,10 @@ public class OAuthSSOAuthenticationFilter implements Filter {
 
 
     protected void processNoRequestToken(HttpServletRequest req, HttpServletResponse resp) throws IOException {
-        OAuthService oauthService = this.getOAuthService(req.getRequestURL().toString());
-
+        String requestUrl = req.getRequestURL().toString();
+        logger.debug("processNoRequestToken requestUrl=" + requestUrl);
+		OAuthService oauthService = this.getOAuthService(requestUrl);
+		logger.debug("got oauthService");
         /*
         Token requestToken = oauthService.getRequestToken();
         req.getSession().setAttribute(ATTR_OAUTH_REQUEST_TOKEN, requestToken);
@@ -357,17 +361,18 @@ public class OAuthSSOAuthenticationFilter implements Filter {
         //Token requestToken = (Token) request.getSession().getAttribute(ATTR_OAUTH_REQUEST_TOKEN);
 
         if (authCode == null) {
+        	logger.debug("No authCode");
             try {
                 this.processNoRequestToken(request, response);
                 return null;
             } catch (Exception e) {
-                logger.debug("Authentication failed: " + e.getMessage());
+                logger.error("Authentication processNoRequestToken failed: " + e.getMessage(), e);
             }
         } else {
             try {
                 return this.processRequestToken(request, response, authCode);
             } catch (Exception e) {
-                logger.debug("Authentication failed: " + e.getMessage());
+                logger.error("Authentication processRequestToken failed: " + e.getMessage(), e);
             }
         }
 
