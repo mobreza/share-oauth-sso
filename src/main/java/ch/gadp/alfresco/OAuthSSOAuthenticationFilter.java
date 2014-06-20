@@ -18,6 +18,7 @@ along with oauth-login-module.  If not, see <http://www.gnu.org/licenses/>.
 package ch.gadp.alfresco;
 
 import com.google.gson.Gson;
+
 import org.apache.commons.httpclient.HttpClient;
 import org.apache.commons.httpclient.HttpMethodBase;
 import org.apache.commons.httpclient.HttpStatus;
@@ -41,6 +42,7 @@ import org.springframework.web.context.support.WebApplicationContextUtils;
 import javax.servlet.*;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
+
 import java.io.IOException;
 
 /**
@@ -153,11 +155,14 @@ public class OAuthSSOAuthenticationFilter implements Filter {
         Token requestToken = oauthService.getRequestToken();
         req.getSession().setAttribute(ATTR_OAUTH_REQUEST_TOKEN, requestToken);
         */
-        resp.sendRedirect(oauthService.getAuthorizationUrl(null));
+        String authorizationUrl = oauthService.getAuthorizationUrl(null);
+        logger.warn("Redirecting to " + authorizationUrl);
+		resp.sendRedirect(authorizationUrl);
     }
 
 
     private GoogleProfileInfo getUserProfile(HttpServletRequest req, HttpServletResponse resp, String authcode) throws IOException {
+        logger.warn("Getting user profile");
         OAuthService oauthService = this.getOAuthService(req.getRequestURL().toString());
 
         /*
@@ -191,6 +196,7 @@ public class OAuthSSOAuthenticationFilter implements Filter {
      * @throws IOException
      */
     protected String getAdminAlfrescoTicket() throws IOException {
+    	 logger.warn("getAdminAlfrescoTicket");
         HttpClient client = new HttpClient();
         PostMethod method = new PostMethod(getAPIUri(REPOSITORY_API_LOGIN));
 
@@ -227,6 +233,7 @@ public class OAuthSSOAuthenticationFilter implements Filter {
      * @throws IOException
      */
     protected boolean userExists(String username, String adminTicket) throws IOException {
+   	 	logger.warn("userExists? " + username);
         GetMethod get = new GetMethod((getAPIUri(REPOSITORY_API_PEOPLE) + "/" + username));
 
         this.addTicketParameter(get, adminTicket);
@@ -240,7 +247,7 @@ public class OAuthSSOAuthenticationFilter implements Filter {
 
 
     protected String saveUser(String username, GoogleProfileInfo userInfo, String adminTicket, boolean newUser) throws IOException {
-
+    	logger.warn("saveUser " + username);
         EntityEnclosingMethod saveUserMethod;
         if (newUser) {
            saveUserMethod = new PostMethod(getAPIUri(REPOSITORY_API_PEOPLE));
@@ -271,7 +278,8 @@ public class OAuthSSOAuthenticationFilter implements Filter {
      * @return true if the email is valid
      */
     protected boolean isUserValid(String userEmail) {
-
+    	logger.warn("isUserValid " + isUserValid);
+        
         if (!EmailValidator.getInstance().isValid(userEmail)) {
             return false;
         }
@@ -310,6 +318,7 @@ public class OAuthSSOAuthenticationFilter implements Filter {
      * @throws ServletException
      */
     protected String processRequestToken(HttpServletRequest request, HttpServletResponse response, String authCode) throws IOException, ServletException {
+    	logger.warn("processRequestToken");
 
         GoogleProfileInfo userInfo = this.getUserProfile(request, response, authCode);
         if (userInfo == null) {
@@ -317,6 +326,7 @@ public class OAuthSSOAuthenticationFilter implements Filter {
         }
 
         if (!isUserValid(userInfo.getEmail())) {
+        	logger.warn("User is not valid");
             return null;
         }
 
@@ -340,7 +350,7 @@ public class OAuthSSOAuthenticationFilter implements Filter {
      * @throws ServletException
      */
     protected String doOAuthAuthentication(HttpServletRequest request, HttpServletResponse response) throws IOException, ServletException {
-
+    	logger.warn("doOAuthAuthentication");
 
         String authCode = request.getParameter("code");
 
@@ -396,6 +406,7 @@ public class OAuthSSOAuthenticationFilter implements Filter {
 
         // Utility parameter to bypass oauth for the session
         if (request.getParameter("bypassOAuth") != null || request.getSession().getAttribute("share.bypassOAuth") != null) {
+        	logger.warn("Bypassing OAuth");
             request.getSession().setAttribute("share.bypassOAuth", true);
             chain.doFilter(servletRequest, servletResponse);
             return;
@@ -404,16 +415,19 @@ public class OAuthSSOAuthenticationFilter implements Filter {
 
         if (AuthenticationUtil.isAuthenticated(request)) {
             // Already authenticated
+        	logger.warn("Already authenticated");
             chain.doFilter(request, response);
             return;
         }
 
         String username = this.doOAuthAuthentication(request, response);
         if (username != null) {
+        	logger.warn("Authenticating user");
             UserFactory userFactory = (UserFactory) getApplicationContext().getBean("user.factory");
             boolean authenticated = userFactory.authenticate(request, username, getConfigurationValue(USER_PASSWORD));
             if (authenticated) {
                 AuthenticationUtil.login(request, response, username);
+            	logger.warn("User authenticated");
             }
         }
         chain.doFilter(servletRequest, servletResponse);
@@ -432,6 +446,7 @@ public class OAuthSSOAuthenticationFilter implements Filter {
      */
     @Override
     public void destroy() {
+    	logger.warn("destroy");
 
     }
 
